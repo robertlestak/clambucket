@@ -1,0 +1,31 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: clambucket-database-updater
+  namespace: default
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: clamav
+            image: clamav/clamav:unstable_base
+            imagePullPolicy: IfNotPresent
+            command:
+            - freshclam
+            volumeMounts:
+            - mountPath: /var/lib/clamav
+              name: clambucket-db
+          volumes:
+          - name: clambucket-db
+            persistentVolumeClaim:
+              claimName: clambucket-db
+          restartPolicy: OnFailure
+          tolerations:
+            - key: "node.kubernetes.io/arch"
+              operator: "Equal"
+              value: "arm64"
+              effect: "PreferNoSchedule"

@@ -1,0 +1,41 @@
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledJob
+metadata:
+  name: clambucket-scan
+  namespace: default
+spec:
+  pollingInterval: 30
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  triggers:
+  - type: aws-sqs-queue
+    authenticationRef:
+      name: clambucket
+    metadata:
+      queueURLFromEnv: EVENT_CONFIG
+      queueLength: "1"
+      awsRegion: "us-west-2"
+  jobTargetRef:
+    template:
+      spec:
+        containers:
+        - name: clambucket
+          image: robertlestak/clambucket:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+          - secretRef:
+              name: clambucket
+          volumeMounts:
+          - mountPath: /var/lib/clamav
+            name: clambucket-db
+        volumes:
+        - name: clambucket-db
+          persistentVolumeClaim:
+            claimName: clambucket-db
+        restartPolicy: OnFailure
+        tolerations:
+          - key: "node.kubernetes.io/arch"
+            operator: "Equal"
+            value: "arm64"
+            effect: "PreferNoSchedule"

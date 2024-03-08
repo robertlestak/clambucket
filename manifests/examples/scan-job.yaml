@@ -1,0 +1,30 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: clambucket-scan
+  namespace: default
+spec:
+  serviceAccountName: clambucket
+  template:
+    spec:
+      containers:
+      - name: clambucket
+        image: robertlestak/clambucket:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: clambucket
+        volumeMounts:
+        - mountPath: /var/lib/clamav
+          name: clambucket-db
+      volumes:
+      - name: clambucket-db
+        persistentVolumeClaim:
+          claimName: clambucket-db
+      restartPolicy: OnFailure
+      tolerations:
+        - key: "node.kubernetes.io/arch"
+          operator: "Equal"
+          value: "arm64"
+          effect: "PreferNoSchedule"

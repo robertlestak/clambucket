@@ -1,0 +1,15 @@
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: clambucket
+  namespace: default
+spec:
+  aws:
+    secretTargetRef:
+    - parameter: awsAccessKeyID
+      name: clambucket
+      key: AWS_ACCESS_KEY_ID
+    - parameter: awsSecretAccessKey
+      name: clambucket
+      key: AWS_SECRET_ACCESS_KEY

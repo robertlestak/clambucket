@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clambucket
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clambucket
+  template:
+    metadata:
+      labels:
+        app: clambucket
+    spec:
+      serviceAccountName: clambucket
+      containers:
+      - name: clambucket
+        image: robertlestak/clambucket:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: clambucket
+        env:
+        - name: WATCH
+          value: "true"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+        volumeMounts:
+        - mountPath: /var/lib/clamav
+          name: clambucket-db
+      volumes:
+      - name: clambucket-db
+        persistentVolumeClaim:
+          claimName: clambucket-db
